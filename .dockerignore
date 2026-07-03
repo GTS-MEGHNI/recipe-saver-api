@@ -1,0 +1,53 @@
+# Dependencies (installed inside the build).
+/vendor
+/node_modules
+
+# Local environment & secrets — provided on the VPS via .env.
+.env
+.env.*
+!.env.example
+
+# VCS & CI.
+.git
+.github
+.gitattributes
+.gitignore
+
+# Local SQLite database — never bake data into the image.
+/database/database.sqlite
+
+# Runtime / generated artifacts (regenerated in the container).
+/storage/logs/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/pail
+/bootstrap/cache/*.php
+/public/storage
+
+# Tests & tooling not needed at runtime.
+/tests
+/.phpunit.cache
+/.phpunit.result.cache
+.phpunit.result.cache
+phpunit.xml
+phpstan.neon
+pint.json
+
+# Editor / IDE / agent metadata.
+/.idea
+/.vscode
+/.zed
+/.fleet
+/.claude
+/.codex
+/.agents
+/.mcp.json
+boost.json
+AGENTS.md
+CLAUDE.md
+
+# Docker artifacts.
+Dockerfile
+.dockerignore
+docker-compose.yml

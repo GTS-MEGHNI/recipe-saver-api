@@ -1,0 +1,19 @@
+{
+	# Disable automatic HTTPS — TLS is expected to be terminated by a reverse
+	# proxy on the VPS (nginx / Caddy / Traefik). The container serves plain HTTP.
+	auto_https off
+	frankenphp
+}
+
+:80 {
+	root * /app/public
+	encode zstd gzip
+
+	# Serve the Laravel application through FrankenPHP.
+	php_server
+
+	log {
+		output stdout
+		format console
+	}
+}
