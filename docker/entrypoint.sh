@@ -17,6 +17,15 @@ if [ ! -f "$DB_FILE" ]; then
     touch "$DB_FILE"
 fi
 
+# The storage volume mounts over /app/storage, so guarantee the framework
+# directories exist before Laravel (file cache/sessions, logs) touches them.
+mkdir -p \
+    /app/storage/framework/cache/data \
+    /app/storage/framework/sessions \
+    /app/storage/framework/views \
+    /app/storage/app/public \
+    /app/storage/logs
+
 # Ensure the runtime user owns the writable paths (volumes mount as root).
 chown -R www-data:www-data "$DB_DIR" /app/storage /app/bootstrap/cache 2>/dev/null || true
 

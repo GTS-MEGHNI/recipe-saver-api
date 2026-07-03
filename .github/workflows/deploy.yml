@@ -15,6 +15,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          envs: APP_KEY,RECIPE_API_KEY,APP_URL
           script: |
             set -e
             APP_DIR=/srv/recipe-saver-api
@@ -25,5 +26,31 @@ jobs:
             fi
             cd "$APP_DIR"
             git pull origin main
+            cat > .env <<EOF
+            APP_NAME="Recipes API"
+            APP_ENV=production
+            APP_KEY=${APP_KEY}
+            APP_DEBUG=false
+            APP_URL=${APP_URL}
+
+            RECIPE_API_KEY=${RECIPE_API_KEY}
+
+            DB_CONNECTION=sqlite
+            DB_DATABASE=/data/database.sqlite
+
+            # Stateless API: no worker, no sessions table, no cache usage.
+            # Pin drivers so nothing depends on a missing table or absent queue worker.
+            QUEUE_CONNECTION=sync
+            SESSION_DRIVER=file
+            CACHE_STORE=file
+
+            # Log to stderr so Docker captures output; keep production noise low.
+            LOG_CHANNEL=stderr
+            LOG_LEVEL=warning
+            EOF
             docker compose build --no-cache
             docker compose up -d
+        env:
+          APP_KEY: ${{ secrets.APP_KEY }}
+          RECIPE_API_KEY: ${{ secrets.RECIPE_API_KEY }}
+          APP_URL: ${{ secrets.APP_URL }}
