@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: recipes-api:latest
+    restart: unless-stopped
+    # Server-managed production environment (APP_KEY, RECIPE_API_KEY, mail, etc.).
+    # This file lives on the VPS only and is git-ignored — see .env.example.
+    env_file:
+      - .env
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      # SQLite persisted on the db-data volume, kept out of /app so image
+      # rebuilds never clobber it and new migrations always ship.
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /data/database.sqlite
+    ports:
+      # Container listens on :80; expose it on the host port of your choice
+      # (default 8080). Put a TLS-terminating reverse proxy in front.
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - db-data:/data
+      - storage-data:/app/storage
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:80/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  db-data:
+  storage-data:
