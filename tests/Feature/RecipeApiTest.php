@@ -102,7 +102,10 @@ class RecipeApiTest extends TestCase
         $response->assertCreated()
             ->assertJsonPath('data.title', 'Limonade')
             ->assertJsonPath('data.category', 'DRINKS')
-            ->assertJsonPath('data.cookTimeMinutes', 10);
+            ->assertJsonPath('data.cookTimeMinutes', 10)
+            // Must be a concrete false (not null) straight out of create, so the mobile client can
+            // decode the flag on the create response.
+            ->assertJsonPath('data.isFavorite', false);
 
         $this->assertDatabaseHas('recipes', [
             'title' => 'Limonade',

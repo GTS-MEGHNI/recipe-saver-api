@@ -41,6 +41,17 @@ class Recipe extends Model
     ];
 
     /**
+     * Default attribute values. Ensures a freshly created recipe reports `is_favorite` as `false`
+     * (not null) in the create response, before it's reloaded from the DB where the column default
+     * applies.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_favorite' => false,
+    ];
+
+    /**
      * Delete the cover file and every gallery image (rows + files) only when the recipe is
      * permanently deleted. Soft deletes preserve everything so the recipe can be restored intact.
      * Deleting each image via Eloquent triggers its own file cleanup, so nothing is orphaned.
