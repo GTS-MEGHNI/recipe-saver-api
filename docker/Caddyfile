@@ -4,6 +4,14 @@
 	# client IP via X-Forwarded-For — see bootstrap/app.php trustProxies().
 	auto_https off
 	frankenphp
+
+	# Host nginx already writes an access log for every request and terminates
+	# TLS, so Caddy's own per-request access log is redundant noise. Keep only
+	# WARN+ from Caddy/FrankenPHP itself; Laravel app logs come through PHP's
+	# stderr (see LOG_STACK=stderr in docker-compose.yml).
+	log {
+		level WARN
+	}
 }
 
 :80 {
@@ -12,9 +20,4 @@
 
 	# Serve the Laravel application through FrankenPHP.
 	php_server
-
-	log {
-		output stdout
-		format console
-	}
 }
