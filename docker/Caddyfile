@@ -1,11 +1,12 @@
 {
-	# Disable automatic HTTPS — TLS is expected to be terminated by a reverse
-	# proxy on the VPS (nginx / Caddy / Traefik). The container serves plain HTTP.
-	auto_https off
+	# Automatic HTTPS via Let's Encrypt. The site address below is a real,
+	# publicly-resolvable hostname (sslip.io maps 137.74.214.52.sslip.io -> the
+	# VPS IP), which is all the ACME HTTP-01 challenge needs — no domain purchase.
+	# Requires ports 80 (challenge) and 443 (HTTPS) reachable on the host.
 	frankenphp
 }
 
-:80 {
+137.74.214.52.sslip.io {
 	root * /app/public
 	encode zstd gzip
 
@@ -16,4 +17,12 @@
 		output stdout
 		format console
 	}
+}
+
+# Container-local plaintext endpoint for the Docker healthcheck only (Host:
+# localhost, never exposed publicly). `http://` forces plain HTTP so no cert is
+# attempted for localhost.
+http://localhost {
+	root * /app/public
+	php_server
 }

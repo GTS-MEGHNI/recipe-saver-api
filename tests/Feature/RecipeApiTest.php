@@ -54,6 +54,39 @@ class RecipeApiTest extends TestCase
         $this->getJson('/api/recipes', ['X-API-Key' => 'wrong'])->assertUnauthorized();
     }
 
+    public function test_repeated_bad_keys_from_an_ip_are_locked_out(): void
+    {
+        config([
+            'recipes.auth_throttle.max_failures' => 5,
+            'recipes.auth_throttle.window_seconds' => 60,
+            'recipes.auth_throttle.lockout_seconds' => 3600,
+        ]);
+
+        // The first four bad attempts are rejected as unauthorized, not throttled.
+        for ($attempt = 0; $attempt < 4; $attempt++) {
+            $this->getJson('/api/recipes', ['X-API-Key' => 'wrong'])->assertUnauthorized();
+        }
+
+        // The fifth failure trips the lockout and returns 429 with a Retry-After header.
+        $this->getJson('/api/recipes', ['X-API-Key' => 'wrong'])
+            ->assertStatus(429)
+            ->assertHeader('Retry-After');
+
+        // Once locked out, even the correct key is refused until the lockout expires.
+        $this->getJson('/api/recipes', $this->keyHeaders())->assertStatus(429);
+    }
+
+    public function test_a_valid_key_is_not_affected_by_earlier_failures_below_the_threshold(): void
+    {
+        config(['recipes.auth_throttle.max_failures' => 5]);
+        $this->makeRecipe();
+
+        $this->getJson('/api/recipes', ['X-API-Key' => 'wrong'])->assertUnauthorized();
+        $this->getJson('/api/recipes', ['X-API-Key' => 'wrong'])->assertUnauthorized();
+
+        $this->getJson('/api/recipes', $this->keyHeaders())->assertOk();
+    }
+
     public function test_it_lists_recipes_newest_first(): void
     {
         $older = $this->makeRecipe(['title' => 'Ancienne']);

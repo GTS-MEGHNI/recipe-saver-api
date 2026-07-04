@@ -33,6 +33,10 @@ jobs:
             APP_DEBUG=false
             APP_URL=${APP_URL}
 
+            # TLS is terminated by Caddy (Let's Encrypt via sslip.io); force the
+            # https scheme on every generated URL.
+            FORCE_HTTPS=true
+
             RECIPE_API_KEY=${RECIPE_API_KEY}
 
             DB_CONNECTION=sqlite
@@ -44,9 +48,11 @@ jobs:
             SESSION_DRIVER=file
             CACHE_STORE=file
 
-            # Log to stderr so Docker captures output; keep production noise low.
-            LOG_CHANNEL=stderr
+            # Rotating daily log files inside the container; keep production noise low.
+            LOG_CHANNEL=stack
+            LOG_STACK=daily
             LOG_LEVEL=warning
+            LOG_DAILY_DAYS=14
             EOF
             docker compose build --no-cache
             docker compose up -d

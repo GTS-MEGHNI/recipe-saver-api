@@ -17,10 +17,15 @@ services:
       DB_CONNECTION: sqlite
       DB_DATABASE: /data/database.sqlite
     ports:
-      # Container listens on :80; expose it on the host port of your choice
-      # (default 8080). Put a TLS-terminating reverse proxy in front.
-      - "${APP_PORT:-8080}:80"
+      # Caddy terminates TLS itself (Let's Encrypt via sslip.io). Port 80 must
+      # stay open for the ACME HTTP-01 challenge + HTTP->HTTPS redirect; 443
+      # serves the API. No external reverse proxy.
+      - "80:80"
+      - "443:443"
     volumes:
+      # /data is persistent: holds both the SQLite DB and Caddy's Let's Encrypt
+      # certificates (FrankenPHP stores them under /data/caddy), so redeploys
+      # never re-request certs and hit rate limits.
       - db-data:/data
       - storage-data:/app/storage
     healthcheck:
