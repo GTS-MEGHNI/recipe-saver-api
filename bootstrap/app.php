@@ -13,6 +13,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The container runs behind the host's nginx reverse proxy. Trust the
+        // proxy's peer address (the Docker bridge gateway) so $request->ip()
+        // reads the real client from nginx's X-Forwarded-For header instead of
+        // the gateway. Set via TRUSTED_PROXIES (comma-separated, or `*`); config()
+        // isn't available this early, so read env directly. If unset, no proxy is
+        // trusted — fail safe, not open.
+        $trustedProxies = (string) env('TRUSTED_PROXIES', '');
+        $middleware->trustProxies(at: $trustedProxies === '*'
+            ? '*'
+            : array_values(array_filter(array_map('trim', explode(',', $trustedProxies)))),
+        );
+
         $middleware->alias([
             'api.key' => EnsureApiKey::class,
         ]);

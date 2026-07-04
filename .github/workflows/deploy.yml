@@ -15,7 +15,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: APP_KEY,RECIPE_API_KEY,APP_URL
+          envs: APP_KEY,RECIPE_API_KEY,APP_URL,TRUSTED_PROXIES
           script: |
             set -e
             APP_DIR=/srv/recipe-saver-api
@@ -33,9 +33,13 @@ jobs:
             APP_DEBUG=false
             APP_URL=${APP_URL}
 
-            # TLS is terminated by Caddy (Let's Encrypt via sslip.io); force the
+            # TLS is terminated by the host's nginx reverse proxy; force the
             # https scheme on every generated URL.
             FORCE_HTTPS=true
+
+            # Reverse-proxy peer(s) to trust for X-Forwarded-* (the Docker bridge
+            # gateway), so the real client IP is used. Set via repo secret.
+            TRUSTED_PROXIES=${TRUSTED_PROXIES}
 
             RECIPE_API_KEY=${RECIPE_API_KEY}
 
@@ -60,3 +64,4 @@ jobs:
           APP_KEY: ${{ secrets.APP_KEY }}
           RECIPE_API_KEY: ${{ secrets.RECIPE_API_KEY }}
           APP_URL: ${{ secrets.APP_URL }}
+          TRUSTED_PROXIES: ${{ secrets.TRUSTED_PROXIES }}
