@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Storage;
  * @property list<string> $steps
  * @property int|null $cook_time_minutes
  * @property RecipeCategory|null $category
+ * @property bool $is_favorite
  * @property string|null $cover_image_path
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -36,6 +37,7 @@ class Recipe extends Model
         'steps',
         'cook_time_minutes',
         'category',
+        'is_favorite',
     ];
 
     /**
@@ -74,6 +76,7 @@ class Recipe extends Model
             'steps' => 'array',
             'cook_time_minutes' => 'integer',
             'category' => RecipeCategory::class,
+            'is_favorite' => 'boolean',
         ];
     }
 }

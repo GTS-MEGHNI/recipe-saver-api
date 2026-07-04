@@ -161,6 +161,46 @@ class RecipeApiTest extends TestCase
         ]);
     }
 
+    public function test_recipes_are_not_favorite_by_default(): void
+    {
+        $recipe = $this->makeRecipe();
+
+        $this->getJson("/api/recipes/{$recipe->id}", $this->keyHeaders())
+            ->assertOk()
+            ->assertJsonPath('data.isFavorite', false);
+    }
+
+    public function test_it_toggles_the_favorite_flag(): void
+    {
+        $recipe = $this->makeRecipe();
+
+        $this->putJson("/api/recipes/{$recipe->id}", [
+            'title' => $recipe->title,
+            'ingredients' => $recipe->ingredients,
+            'steps' => $recipe->steps,
+            'isFavorite' => true,
+        ], $this->keyHeaders())
+            ->assertOk()
+            ->assertJsonPath('data.isFavorite', true);
+
+        $this->assertDatabaseHas('recipes', ['id' => $recipe->id, 'is_favorite' => true]);
+    }
+
+    public function test_an_edit_without_the_flag_preserves_the_favorite_state(): void
+    {
+        $recipe = $this->makeRecipe(['is_favorite' => true]);
+
+        // A plain edit omits isFavorite entirely; the recipe must stay favorite.
+        $this->putJson("/api/recipes/{$recipe->id}", [
+            'title' => 'Tarte renommée',
+            'ingredients' => $recipe->ingredients,
+            'steps' => $recipe->steps,
+        ], $this->keyHeaders())
+            ->assertOk()
+            ->assertJsonPath('data.title', 'Tarte renommée')
+            ->assertJsonPath('data.isFavorite', true);
+    }
+
     public function test_it_soft_deletes_a_recipe_and_preserves_its_images(): void
     {
         Storage::fake('public');

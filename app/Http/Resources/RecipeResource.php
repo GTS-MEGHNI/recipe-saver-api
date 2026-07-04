@@ -28,6 +28,7 @@ class RecipeResource extends JsonResource
             'steps' => $this->steps,
             'cookTimeMinutes' => $this->cook_time_minutes,
             'category' => $this->category?->value,
+            'isFavorite' => $this->is_favorite,
             'coverImageUrl' => $this->cover_image_path !== null
                 ? Storage::disk('public')->url($this->cover_image_path)
                 : null,
