@@ -12,6 +12,7 @@ enum RecipeCategory: string
 {
     case Drinks = 'DRINKS';
     case Food = 'FOOD';
+    case Quiche = 'QUICHE';
     case Pastry = 'PASTRY';
     case Verrine = 'VERRINE';
     case Cake = 'CAKE';
