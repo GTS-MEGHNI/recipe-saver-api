@@ -161,7 +161,7 @@ class RecipeApiTest extends TestCase
         ]);
     }
 
-    public function test_it_deletes_a_recipe_and_its_image_files(): void
+    public function test_it_soft_deletes_a_recipe_and_preserves_its_images(): void
     {
         Storage::fake('public');
         $recipe = $this->makeRecipe();
@@ -172,6 +172,37 @@ class RecipeApiTest extends TestCase
 
         $this->deleteJson("/api/recipes/{$recipe->id}", [], $this->keyHeaders())
             ->assertNoContent();
+
+        // Row is soft deleted, images and files are kept so the recipe can be restored intact.
+        $this->assertSoftDeleted('recipes', ['id' => $recipe->id]);
+        $this->assertDatabaseHas('recipe_images', ['recipe_id' => $recipe->id]);
+        Storage::disk('public')->assertExists('recipes/1/cover/c.jpg');
+        Storage::disk('public')->assertExists('recipes/1/gallery/g.jpg');
+    }
+
+    public function test_soft_deleted_recipes_are_excluded_from_the_api(): void
+    {
+        $recipe = $this->makeRecipe();
+        $recipe->delete();
+
+        $this->getJson('/api/recipes', $this->keyHeaders())
+            ->assertOk()
+            ->assertJsonCount(0, 'data');
+
+        $this->getJson("/api/recipes/{$recipe->id}", $this->keyHeaders())
+            ->assertNotFound();
+    }
+
+    public function test_force_deleting_a_recipe_removes_its_image_files(): void
+    {
+        Storage::fake('public');
+        $recipe = $this->makeRecipe();
+        $recipe->forceFill(['cover_image_path' => 'recipes/1/cover/c.jpg'])->save();
+        Storage::disk('public')->put('recipes/1/cover/c.jpg', 'x');
+        Storage::disk('public')->put('recipes/1/gallery/g.jpg', 'y');
+        $recipe->images()->create(['path' => 'recipes/1/gallery/g.jpg', 'position' => 0]);
+
+        $recipe->forceDelete();
 
         $this->assertDatabaseMissing('recipes', ['id' => $recipe->id]);
         $this->assertDatabaseEmpty('recipe_images');

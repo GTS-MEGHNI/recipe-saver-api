@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\RecipeCategory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,10 +20,13 @@ use Illuminate\Support\Facades\Storage;
  * @property string|null $cover_image_path
  * @property Carbon $created_at
  * @property Carbon $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, RecipeImage> $images
+ * @property Carbon|null $deleted_at
+ * @property-read Collection<int, RecipeImage> $images
  */
 class Recipe extends Model
 {
+    use SoftDeletes;
+
     /**
      * @var list<string>
      */
@@ -34,12 +39,13 @@ class Recipe extends Model
     ];
 
     /**
-     * Delete the cover file and every gallery image (rows + files) when the recipe is deleted.
+     * Delete the cover file and every gallery image (rows + files) only when the recipe is
+     * permanently deleted. Soft deletes preserve everything so the recipe can be restored intact.
      * Deleting each image via Eloquent triggers its own file cleanup, so nothing is orphaned.
      */
     protected static function booted(): void
     {
-        static::deleting(function (Recipe $recipe): void {
+        static::forceDeleting(function (Recipe $recipe): void {
             if ($recipe->cover_image_path !== null) {
                 Storage::disk('public')->delete($recipe->cover_image_path);
             }
